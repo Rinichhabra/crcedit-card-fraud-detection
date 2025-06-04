@@ -1,36 +1,34 @@
 import streamlit as st
-import pickle
 import numpy as np
+import pickle
 
-model = pickle.load(open('xgb_model.pkl', 'rb'))
+# Load the trained model
+with open('xgb_model.pkl', 'rb') as f:
+    model = pickle.load(f)
 
-st.title("💳 Credit Card Fraud Detection")
-st.write("""
-This app predicts whether a given credit card transaction is fraudulent based on selected input features.
-Please enter the feature values below and click **Predict**.
-""")
+st.title("Credit Card Fraud Detection")
 
-v_features = []
-for i in range(1, 29):
-    value = st.number_input(f"V{i}", step=0.1, format="%.4f")
-    v_features.append(value)
+# Features the model was trained on (based on your earlier test)
+features = ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9']
 
-amount = st.number_input("Transaction Amount", min_value=0.0, step=0.1, format="%.2f")
+# Input form
+input_data = []
+for feature in features:
+    val = st.number_input(f'Enter value for {feature}', format="%.6f")
+    input_data.append(val)
 
-input_data = np.array([v_features + [amount]])
-st.write(f"Input data shape: {input_data.shape}")
+input_array = np.array(input_data).reshape(1, -1)
 
-if st.button("Predict"):
-    try:
-        prediction = model.predict(input_data)
-        probability = model.predict_proba(input_data)[0][1]
+# Predict button
+if st.button('Predict Fraud'):
+    prediction = model.predict(input_array)[0]
+    proba = model.predict_proba(input_array)[0][1]
+    
+    if prediction == 1:
+        st.error(f"Fraudulent Transaction Detected! 🚨 Probability: {proba:.2%}")
+    else:
+        st.success(f"Transaction is Legitimate ✅ Probability of fraud: {proba:.2%}")
 
-        if prediction[0] == 1:
-            st.error(f"🚨 Alert: This transaction is likely **fraudulent**. Probability: {probability:.2f}")
-        else:
-            st.success(f"✅ Safe: This transaction is **not fraudulent**. Probability: {probability:.2f}")
-    except Exception as e:
-        st.error(f"Prediction error: {e}")
 
 st.sidebar.info("""
 Developed by **Rini Chhabra**  
