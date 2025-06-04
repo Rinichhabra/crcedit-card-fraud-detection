@@ -1,34 +1,48 @@
 import streamlit as st
-import numpy as np
 import pickle
+import numpy as np
 
 # Load the trained model
 with open('xgb_model.pkl', 'rb') as f:
     model = pickle.load(f)
 
-st.title("Credit Card Fraud Detection")
+st.title("💳 Credit Card Fraud Detection")
 
-# Features the model was trained on (based on your earlier test)
-features = ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9']
+st.write("""
+This app predicts whether a credit card transaction is fraudulent based on 10 selected input features.
+Adjust the sliders below and click **Predict Fraud**.
+""")
 
-# Input form
+# Features the model was trained on with some example ranges (you can adjust these)
+features = {
+    'Time': (0.0, 172792.0, 50000.0),  # min, max, default
+    'V1': (-5.0, 5.0, 0.0),
+    'V2': (-5.0, 5.0, 0.0),
+    'V3': (-5.0, 5.0, 0.0),
+    'V4': (-5.0, 5.0, 0.0),
+    'V5': (-5.0, 5.0, 0.0),
+    'V6': (-5.0, 5.0, 0.0),
+    'V7': (-5.0, 5.0, 0.0),
+    'V8': (-5.0, 5.0, 0.0),
+    'V9': (-5.0, 5.0, 0.0)
+}
+
 input_data = []
-for feature in features:
-    val = st.number_input(f'Enter value for {feature}', format="%.6f")
+for feature, (min_val, max_val, default) in features.items():
+    val = st.slider(f"Enter value for {feature}", min_value=float(min_val), max_value=float(max_val), value=float(default), step=0.01)
     input_data.append(val)
 
 input_array = np.array(input_data).reshape(1, -1)
 
-# Predict button
-if st.button('Predict Fraud'):
+if st.button("Predict Fraud"):
     prediction = model.predict(input_array)[0]
     proba = model.predict_proba(input_array)[0][1]
-    
-    if prediction == 1:
-        st.error(f"Fraudulent Transaction Detected! 🚨 Probability: {proba:.2%}")
-    else:
-        st.success(f"Transaction is Legitimate ✅ Probability of fraud: {proba:.2%}")
+    proba_percent = proba * 100
 
+    if prediction == 1:
+        st.error(f"🚨 Fraudulent Transaction Detected! Probability: {proba_percent:.2f}%")
+    else:
+        st.success(f"✅ Transaction is Legitimate. Probability of fraud: {proba_percent:.2f}%")
 
 st.sidebar.info("""
 Developed by **Rini Chhabra**  
